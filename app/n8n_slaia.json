@@ -1,0 +1,402 @@
+{
+  "name": "Nexus ERP - Ciclo Perfecto (IA Chat Fix)",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('Email Trigger (IMAP)').item.json.subject }}",
+              "operation": "contains",
+              "value2": "TK-"
+            }
+          ]
+        }
+      },
+      "name": "Es Respuesta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -820,
+        80
+      ],
+      "id": "a7f21e17-2af5-44aa-9de3-d5ac3a2cefdd"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let subject = \"\";\ntry {\n  subject = $('Email Trigger (IMAP)').item.json.subject;\n} catch (error) {\n  subject = $json.subject || \"\";\n}\n\nif (!subject) subject = \"NO SE ENCONTRO EL ASUNTO\";\n\nconst match = subject.match(/(TK-\\d+)/i);\n\nreturn {\n  ticket_id: match ? match[1] : null\n};"
+      },
+      "name": "Extraer ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -580,
+        160
+      ],
+      "id": "713a903e-be29-4839-a355-54e5dd92ad96"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -20
+      ],
+      "id": "c097e1be-bd96-46d2-a298-b4a5d993e52d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4C5NOPZ4tDjqCCV5",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "forceReconnect": 60,
+          "trackLastMessageId": true
+        }
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -1120,
+        -128
+      ],
+      "id": "5afa6bd0-52df-45b7-a687-d2adc360e1b9",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "pUe9z45LL5o0Yqph",
+          "name": "IMAP account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "reportantes",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $json.from.match(/<(.+)>/)[1] }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        80
+      ],
+      "id": "132678a4-5915-420f-901c-4fa27d1d368c",
+      "name": "Obtiene cliente",
+      "credentials": {
+        "supabaseApi": {
+          "id": "b8xzxh77BqcHglOo",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// --- FUNCIONES DE SEGURIDAD ---\nfunction buscarDato(nombreNodo, campo, valorPorDefecto) {\n  try {\n    if ($(nombreNodo) && $(nombreNodo).item && $(nombreNodo).item.json) {\n      const valor = $(nombreNodo).item.json[campo];\n      return (valor !== undefined && valor !== null) ? valor : valorPorDefecto;\n    } \n    else if ($(nombreNodo) && $(nombreNodo).first && $(nombreNodo).first().json) {\n       const valor = $(nombreNodo).first().json[campo];\n       return (valor !== undefined && valor !== null) ? valor : valorPorDefecto;\n    }\n    return valorPorDefecto;\n  } catch (error) {\n    return valorPorDefecto;\n  }\n}\n\n// --- 1. OBTENCIÓN DE DATOS ---\nconst fecha = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });\n\nconst idTicket = buscarDato('Extraer ID', 'ticket_id', \"SIN_ID\");\nconst nombreCliente = buscarDato('Get many rows', 'nombre', \"Cliente\");\nconst textoCliente = buscarDato('Email Trigger (IMAP)', 'textPlain', \"Sin mensaje legible.\");\nconst rawIA = buscarDato('Basic LLM Chain1', 'text', \"\");\n\n// --- 2. PROCESAMIENTO INTELIGENTE ---\nlet respuestaParaCliente = rawIA;\nlet dbModulo = \"General\"; \nlet dbPrioridad = \"Media\";\nlet dbDatosFaltantes = \"\";\n\ntry {\n  const jsonLimpio = rawIA.replace(/```json/g, '').replace(/```/g, '').trim();\n  \n  if (jsonLimpio.startsWith('{')) {\n    const objetoIA = JSON.parse(jsonLimpio);\n    dbModulo = objetoIA.modulo || \"General\";\n    dbPrioridad = objetoIA.prioridad || \"Media\";\n\n    if (objetoIA.datos_faltantes && Array.isArray(objetoIA.datos_faltantes)) {\n      dbDatosFaltantes = objetoIA.datos_faltantes.map((pregunta, index) => `${index + 1}. ${pregunta}`).join('\\n');\n    }\n\n    if (objetoIA.datos_faltantes && Array.isArray(objetoIA.datos_faltantes) && objetoIA.datos_faltantes.length > 0) {\n      respuestaParaCliente = `\n        Hemos analizado su reporte sobre <b>\"${objetoIA.resumen || 'el incidente'}\"</b>.<br>\n        Para poder resolverlo, necesitamos que nos brinde la siguiente información:\n        <ul>\n          <li>${objetoIA.datos_faltantes.join('</li><li>')}</li>\n        </ul>\n      `;\n    } else if (objetoIA.respuesta) {\n      respuestaParaCliente = objetoIA.respuesta;\n    } else {\n       respuestaParaCliente = jsonLimpio;\n    }\n  }\n} catch (e) {\n  respuestaParaCliente = rawIA.replace(/```json/g, '').replace(/```/g, '');\n  dbDatosFaltantes = rawIA;\n}\n\nfunction hacerHtmlBonito(contenido, nombre) {\n  let cuerpo = contenido;\n  if (!cuerpo.includes('<ul')) {\n      cuerpo = cuerpo.replace(/\\n/g, '<br>');\n  }\n\n  return `\n    <div style=\"font-family: Arial, sans-serif; color: #333333; line-height: 1.6; font-size: 14px;\">\n      Hola <b>${nombre}</b>,<br><br>\n      Gracias por contactar a Soporte.<br><br>\n      ${cuerpo}\n      <br><br>\n      <hr style=\"border: 0; border-top: 1px solid #eeeeee;\">\n      <small style=\"color: #888888;\">Ticket ID: ${idTicket}</small>\n    </div>\n  `;\n}\n\n// --- 4. PREPARACIÓN BASE DE DATOS (AQUÍ ESTÁ LA MAGIA) ---\nconst clienteSafe = (textoCliente || \"\").replace(/'/g, \"''\");\nconst iaSafe = respuestaParaCliente.toString().replace(/<[^>]*>?/gm, ' ').replace(/'/g, \"''\");\n\n// ESTE ES EL FORMATO QUE VERÁS EN EL DASHBOARD\nconst bloqueHistorial = `\n[CLIENTE - ${fecha}]:\n${clienteSafe}\n\n----------------------------------------\n\n[SOPORTE IA - ${fecha}]:\n${iaSafe}\n\n----------------------------------------\n`;\n\nreturn {\n  id_ticket_limpio: idTicket.toString().trim(), \n  actualizacion_historial: bloqueHistorial,\n  email_html_bonito: hacerHtmlBonito(respuestaParaCliente, nombreCliente),\n  modulo_ticket: dbModulo,\n  prioridad_ticket: dbPrioridad,\n  datos_faltantes_lista: dbDatosFaltantes\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        160
+      ],
+      "id": "c28917f2-6c92-4934-b24b-3495d0b3a3c4",
+      "name": "Actualiza Historial y crea email html"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tickets\nSET \n  comentarios = '{{ $json.actualizacion_historial }}' || COALESCE(comentarios, ''),\n  estado = 'En Progreso'\nWHERE id_ticket = '{{ $json.id_ticket_limpio }}'\nRETURNING *;",
+        "options": {
+          "queryReplacement": ""
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -140,
+        160
+      ],
+      "id": "4fe80543-9054-48a3-a3b5-9fa124c9507c",
+      "name": "Guarda Historial_respuestas",
+      "credentials": {
+        "postgres": {
+          "id": "HYavPycVyI92cipK",
+          "name": "Postgres account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "tickets",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_ticket",
+              "condition": "eq",
+              "keyValue": "={{ $('Extraer ID').item.json.ticket_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        60,
+        160
+      ],
+      "id": "36df1bee-3aa1-4399-a6a8-c1cea773080f",
+      "name": "Obtiene ticket actualizado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "b8xzxh77BqcHglOo",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fecha = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });\n\n// Datos simples para el mensaje de cambio de estado\nconst mensajeSistema = \"Su respuesta ha sido recibida correctamente. El estado de su ticket ha cambiado a 'En Revisión'.\";\n\nconst emailHtml = `\n  <div style=\"font-family: Arial, sans-serif; color: #333;\">\n    ${mensajeSistema}\n    <br><br>\n    Saludos,<br><b>Equipo de Soporte</b>\n  </div>\n`;\n\nconst logSistema = `\n[SISTEMA - ${fecha}]:\n${mensajeSistema}\n\n----------------------------------------\n`;\n\nreturn {\n  nuevo_estado: \"En Revisión\",\n  actualizacion_sistema: logSistema,\n  email_respuesta: emailHtml\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        160
+      ],
+      "id": "0d689914-86b5-490d-a2af-31977382f82d",
+      "name": "Cambia estado ticket"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "tickets",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_ticket",
+              "condition": "eq",
+              "keyValue": "={{ $('Extraer ID').item.json.ticket_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "En Revisión"
+            },
+            {
+              "fieldId": "comentarios",
+              "fieldValue": "={{ $json.actualizacion_sistema }} {{ $('Obtiene ticket actualizado').item.json.comentarios }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        160
+      ],
+      "id": "701cf96e-97cb-4e77-8618-3918319ecebe",
+      "name": "Actualiza tabla BD",
+      "credentials": {
+        "supabaseApi": {
+          "id": "b8xzxh77BqcHglOo",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "= {{ $('Email Trigger (IMAP)').item.json.metadata['delivered-to'] }}",
+        "toEmail": "={{ $json.email_reportante }}",
+        "subject": "={{ $json.id_ticket }} - Actualización",
+        "html": "={{ $('Cambia estado ticket').item.json.email_respuesta }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        640,
+        160
+      ],
+      "id": "2c440b30-39b1-4603-b81b-0a1b41b85859",
+      "name": "Envia Aviso al cliente",
+      "credentials": {
+        "smtp": {
+          "id": "6OqZi2IGroiDXRZB",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Nombre: {{ $('Obtiene cliente').item.json.nombre }}\nEmpresa: {{ $json.cliente }}\nEmail: {{ $('Obtiene cliente').item.json.email }}\n{{ $('Email Trigger (IMAP)').item.json.subject }} : {{ $('Email Trigger (IMAP)').item.json.textPlain }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=ACTÚA COMO: Ingeniero de Soporte Experto en ERP.\n\nOBJETIVO: Analizar el correo entrante y diagnosticar qué información falta.\n\nESTRUCTURA JSON REQUERIDA:\n{\n  \"resumen\": \"texto corto\",\n  \"prioridad\": \"Alta|Media|Baja\",\n  \"modulo\": \"Ventas|Stock|Contabilidad\",\n  \"datos_faltantes\": [\"pregunta 1\", \"pregunta 2\"],\n  \"respuesta_sugerida\": \"Hola [Nombre], ... (cuerpo con solicitud de datos) ... Saludos, Soporte.\"\n}\n"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -580,
+        -120
+      ],
+      "id": "a76a9f81-468f-4d24-a004-247597969ef4",
+      "name": "LLM crea respuesta SLA"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// --- 1. OBTENCIÓN DE DATOS ---\nconst fecha = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });\n\n// Datos que vienen del nodo anterior (LLM + Email)\nconst textoCliente = $('Email Trigger (IMAP)').item.json.textPlain || \"\";\nconst nombreCliente = $('Obtiene cliente').item.json.nombre || \"Cliente\";\nconst rawIA = $('LLM crea respuesta SLA').item.json.text || \"\";\nconst idGenerado = \"TK-\" + Math.floor(Date.now() / 1000);\n\n// --- 2. PROCESAMIENTO INTELIGENTE ---\nlet respuestaParaCliente = rawIA;\nlet dbModulo = \"General\"; \nlet dbPrioridad = \"Media\";\nlet dbDatosFaltantes = \"\";\n\ntry {\n  const jsonLimpio = rawIA.replace(/```json/g, '').replace(/```/g, '').trim();\n  if (jsonLimpio.startsWith('{')) {\n    const objetoIA = JSON.parse(jsonLimpio);\n    dbModulo = objetoIA.modulo || \"General\";\n    dbPrioridad = objetoIA.prioridad || \"Media\";\n    if (objetoIA.datos_faltantes && Array.isArray(objetoIA.datos_faltantes)) {\n      dbDatosFaltantes = objetoIA.datos_faltantes.map((p, i) => `${i + 1}. ${p}`).join('\\n');\n    }\n    if (objetoIA.respuesta_sugerida) respuestaParaCliente = objetoIA.respuesta_sugerida;\n  }\n} catch (e) {}\n\nfunction hacerHtmlBonito(contenido, nombre) {\n  let cuerpo = contenido.replace(/\\n/g, '<br>');\n  return `\n    <div style=\"font-family: Arial, sans-serif; color: #333;\">\n      Hola <b>${nombre}</b>,<br><br>\n      Gracias por contactar a Soporte.<br><br>\n      ${cuerpo}\n      <br><br>\n      <hr>\n      <small>Ticket ID: ${idGenerado}</small>\n    </div>\n  `;\n}\n\n// --- 3. CONSTRUCCIÓN DEL HISTORIAL (CORREGIDO) ---\n// Esto es lo que se guarda en la BD y lo que lee el Dashboard\nconst clienteSafe = textoCliente.replace(/'/g, \"''\");\nconst iaSafe = respuestaParaCliente.replace(/'/g, \"''\");\n\nconst bloqueHistorial = `\n[CLIENTE - ${fecha}]:\n${clienteSafe}\n\n----------------------------------------\n\n[SOPORTE IA - ${fecha}]:\n${iaSafe}\n\n----------------------------------------\n`;\n\nreturn {\n  id_generado: idGenerado,\n  actualizacion_historial: bloqueHistorial,\n  email_html_bonito: hacerHtmlBonito(respuestaParaCliente, nombreCliente),\n  modulo_ticket: dbModulo,\n  prioridad_ticket: dbPrioridad,\n  datos_faltantes_lista: dbDatosFaltantes\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        -120
+      ],
+      "id": "e3a5d94b-2f9e-4049-a0a1-57aca77e11e8",
+      "name": "Actualiza historial"
+    },
+    {
+      "parameters": {
+        "table": "tickets",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_ticket": "={{ $json.id_generado }}",
+            "usuario_reportante": "={{ $('Obtiene cliente').item.json.nombre }}",
+            "email_reportante": "={{ $('Obtiene cliente').item.json.email }}",
+            "titulo": "={{ $('Email Trigger (IMAP)').item.json.subject }}",
+            "descripcion": "={{ $('Email Trigger (IMAP)').item.json.textPlain }}",
+            "prioridad": "={{ $json.prioridad_ticket }}",
+            "modulo_erp": "={{ $json.modulo_ticket }}",
+            "estado": "Abierto",
+            "comentarios": "={{ $json.actualizacion_historial }}", 
+            "datos_faltantes": "={{ $json.datos_faltantes_lista }}",
+            "es_ticket_valido": true,
+            "fecha_creacion": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {"id": "id_ticket", "displayName": "id_ticket", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "comentarios", "displayName": "comentarios", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "estado", "displayName": "estado", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        80,
+        -120
+      ],
+      "id": "9afc59f4-b52d-44d9-b618-d3068cc87c9c",
+      "name": "Crea ticket en bd",
+      "credentials": {
+        "postgres": {
+          "id": "HYavPycVyI92cipK",
+          "name": "Postgres account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "= {{ $('Email Trigger (IMAP)').item.json.metadata['delivered-to'] }}",
+        "toEmail": "={{ $json.email_reportante }}",
+        "subject": "={{ $json.id_ticket }} - {{ $json.titulo }}",
+        "html": "={{ $('Actualiza historial').item.json.email_html_bonito }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        300,
+        -120
+      ],
+      "id": "210a829b-b737-454f-a6b1-f6fd39abe0e3",
+      "name": "Envia primera respuesta",
+      "credentials": {
+        "smtp": {
+          "id": "6OqZi2IGroiDXRZB",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Es Respuesta?": {
+      "main": [
+        [{"node": "Extraer ID", "type": "main", "index": 0}],
+        [{"node": "LLM crea respuesta SLA", "type": "main", "index": 0}]
+      ]
+    },
+    "Extraer ID": {
+      "main": [[{"node": "Actualiza Historial y crea email html", "type": "main", "index": 0}]]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [[{"node": "LLM crea respuesta SLA", "type": "ai_languageModel", "index": 0}]]
+    },
+    "Email Trigger (IMAP)": {
+      "main": [[{"node": "Obtiene cliente", "type": "main", "index": 0}]]
+    },
+    "Obtiene cliente": {
+      "main": [[{"node": "Es Respuesta?", "type": "main", "index": 0}]]
+    },
+    "Actualiza Historial y crea email html": {
+      "main": [[{"node": "Guarda Historial_respuestas", "type": "main", "index": 0}]]
+    },
+    "Guarda Historial_respuestas": {
+      "main": [[{"node": "Obtiene ticket actualizado", "type": "main", "index": 0}]]
+    },
+    "Obtiene ticket actualizado": {
+      "main": [[{"node": "Cambia estado ticket", "type": "main", "index": 0}]]
+    },
+    "Cambia estado ticket": {
+      "main": [[{"node": "Actualiza tabla BD", "type": "main", "index": 0}]]
+    },
+    "Actualiza tabla BD": {
+      "main": [[{"node": "Envia Aviso al cliente", "type": "main", "index": 0}]]
+    },
+    "LLM crea respuesta SLA": {
+      "main": [[{"node": "Actualiza historial", "type": "main", "index": 0}]]
+    },
+    "Actualiza historial": {
+      "main": [[{"node": "Crea ticket en bd", "type": "main", "index": 0}]]
+    },
+    "Crea ticket en bd": {
+      "main": [[{"node": "Envia primera respuesta", "type": "main", "index": 0}]]
+    }
+  }
+}

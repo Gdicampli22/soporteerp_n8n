@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Nexus ERP</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f3f4f6;
+            --container-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            color: #111827;
+        }
+
+        h2 {
+            margin-top: 40px;
+            color: #374151;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #4b5563;
+            margin-top: 25px;
+        }
+
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, "Andale Mono", monospace;
+            color: #d946ef;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .tag-open { background-color: #22c55e; }
+        .tag-closed { background-color: #64748b; }
+        .tag-progress { background-color: #eab308; }
+
+        .alert {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📘 Nexus ERP - Documentación Técnica y Funcional</h1>
+        <p><strong>Versión:</strong> 1.0.0 | <strong>Tecnologías:</strong> Streamlit, Supabase, Make, Gmail</p>
+    </header>
+
+    <div class="alert">
+        <strong>Propósito del Documento:</strong> Esta guía detalla la arquitectura, configuración de automatizaciones y manuales de uso para agentes y clientes del sistema Nexus ERP Support.
+    </div>
+
+    <h2>📑 Índice</h2>
+    <ul>
+        <li><a href="#arquitectura">1. Visión General de Arquitectura</a></li>
+        <li><a href="#database">2. Configuración de Base de Datos (Supabase)</a></li>
+        <li><a href="#automatizacion">3. Automatización (Make.com)</a></li>
+        <li><a href="#manual-agente">4. Manual del Agente (Staff)</a></li>
+        <li><a href="#manual-usuario">5. Manual del Usuario (Cliente)</a></li>
+        <li><a href="#estados">6. Estados y Flujos de Trabajo</a></li>
+    </ul>
+
+    <h2 id="arquitectura">1. Visión General de Arquitectura</h2>
+    <p>El sistema <strong>Nexus ERP Support</strong> centraliza la gestión de tickets provenientes de múltiples canales (Web y Email).</p>
+    <ul>
+        <li><strong>Frontend:</strong> Desarrollado en Python con <strong>Streamlit</strong>.
+            <ul>
+                <li><code>dashboard.py</code>: Panel de control para agentes (Kanban, métricas).</li>
+                <li><code>portal_cliente.py</code>: Interfaz pública para carga de incidentes.</li>
+            </ul>
+        </li>
+        <li><strong>Backend:</strong> <strong>Supabase (PostgreSQL)</strong>. Persistencia de datos y Storage.</li>
+        <li><strong>Automatización:</strong> <strong>Make</strong>. Orquestación de emails bidireccionales.</li>
+    </ul>
+
+    <h2 id="database">2. Configuración de Base de Datos (Supabase)</h2>
+
+    <h3>Tabla: <code>tickets</code></h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Columna</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>id</code></td>
+                <td>int8 (PK)</td>
+                <td>ID único interno (Usado para updates).</td>
+            </tr>
+            <tr>
+                <td><code>id_ticket</code></td>
+                <td>text</td>
+                <td>ID público (Ej: <code>TK-1745...</code>).</td>
+            </tr>
+            <tr>
+                <td><code>usuario_reportante</code></td>
+                <td>text</td>
+                <td>Nombre del cliente.</td>
+            </tr>
+            <tr>
+                <td><code>email_reportante</code></td>
+                <td>text</td>
+                <td>Correo para notificaciones.</td>
+            </tr>
+            <tr>
+                <td><code>comentarios</code></td>
+                <td>text</td>
+                <td>Historial completo del chat (concatenado).</td>
+            </tr>
+            <tr>
+                <td><code>estado</code></td>
+                <td>text</td>
+                <td><span class="tag tag-open">Abierto</span>, <span class="tag tag-closed">Cerrado</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Tabla: <code>reportantes</code> (Lista Blanca)</h3>
+    <p>Controla los permisos para crear tickets por email.</p>
+    <table>
+        <tr>
+            <th>Columna</th>
+            <th>Tipo</th>
+            <th>Descripción</th>
+        </tr>
+        <tr>
+            <td><code>email</code></td>
+            <td>text (PK)</td>
+            <td>Correo autorizado.</td>
+        </tr>
+        <tr>
+            <td><code>nombre</code></td>
+            <td>text</td>
+            <td>Nombre del cliente/empresa.</td>
+        </tr>
+    </table>
+
+    <h2 id="automatizacion">3. Automatización (Make.com)</h2>
+    <p>El sistema utiliza dos "Robots" principales.</p>
+
+    <h3>🤖 Robot 1: Actualización (Respuestas)</h3>
+    <p>Procesa respuestas a tickets existentes.</p>
+    <ol>
+        <li><strong>Trigger:</strong> Gmail (Asunto contiene <code>TK-</code>).</li>
+        <li><strong>Parser:</strong> Extrae ID numérico con Regex <code>TK-(\d+)</code>.</li>
+        <li><strong>Filtro de Seguridad:</strong> Verifica que el ID exista antes de continuar.</li>
+        <li><strong>Búsqueda:</strong> Supabase busca <code>id_ticket</code> = <code>TK-{{ParserValue}}</code>.</li>
+        <li><strong>Update:</strong> Actualiza el ticket encontrado. Concatena el historial y pone estado <code>Abierto</code>.</li>
+    </ol>
+
+    <h3>🤖 Robot 2: Creación (Nuevos)</h3>
+    <p>Procesa correos nuevos (sin código TK).</p>
+    <ol>
+        <li><strong>Trigger:</strong> Gmail (Asunto NO contiene <code>TK-</code>).</li>
+        <li><strong>Verificación:</strong> Busca el email en tabla <code>reportantes</code>.</li>
+        <li><strong>Router:</strong>
+            <ul>
+                <li>Si existe: Crea ticket nuevo y notifica ID.</li>
+                <li>Si no existe: Envía rechazo.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2 id="manual-agente">4. Manual del Agente (Staff)</h2>
+    <h3>Gestión Diaria</h3>
+    <ul>
+        <li><strong>Kanban:</strong> Arrastre las tarjetas para cambiar estados rápidamente.</li>
+        <li><strong>Respuestas:</strong> Al responder desde el Dashboard, el sistema envía automáticamente el correo al cliente y guarda la copia en el historial.</li>
+    </ul>
+    <div class="alert">
+        ⚠️ <strong>Advertencia:</strong> Nunca modifique manualmente el campo <code>id_ticket</code> desde la base de datos, ya que rompería la sincronización con el correo.
+    </div>
+
+    <h2 id="manual-usuario">5. Manual del Usuario (Cliente)</h2>
+    <h3>Cómo interactuar por Email</h3>
+    <p>Para asegurar que su solicitud sea procesada:</p>
+    <ol>
+        <li>Envíe correos nuevos a <code>soporte@empresa.com</code>.</li>
+        <li>Si recibe una respuesta nuestra con un código en el asunto (Ej: <code>[TK-12345]</code>), <strong>NO BORRE ESE CÓDIGO</strong> al responder.</li>
+        <li>Responda siempre sobre el mismo hilo de conversación.</li>
+    </ol>
+
+    <h2 id="estados">6. Tabla de Comportamientos y Estados</h2>
+    <p>Regla de estados automática según la acción realizada:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Quién Actúa</th>
+                <th>Acción</th>
+                <th>Resultado (Estado)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Cliente</strong></td>
+                <td>Envía email nuevo</td>
+                <td><span class="tag tag-open">Abierto</span> (Crea Ticket)</td>
+            </tr>
+            <tr>
+                <td><strong>Cliente</strong></td>
+                <td>Responde email con [TK-]</td>
+                <td><span class="tag tag-open">Abierto</span> (Re-apertura)</td>
+            </tr>
+            <tr>
+                <td><strong>Agente</strong></td>
+                <td>Responde desde Dashboard</td>
+                <td><span class="tag tag-progress">En Progreso</span> / Esperando</td>
+            </tr>
+            <tr>
+                <td><strong>Agente</strong></td>
+                <td>Cierra ticket en Kanban</td>
+                <td><span class="tag tag-closed">Cerrado</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <footer>
+        <p>Documentación generada para Nexus ERP &copy; 2026</p>
+    </footer>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Nexus ERP</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --sidebar-bg: #0f172a;
+            --sidebar-text: #e2e8f0;
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+        }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-color); }
+        
+        /* SIDEBAR */
+        .sidebar { width: 280px; background-color: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; color: white; }
+        .menu-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .menu-item:hover { background-color: rgba(255,255,255,0.1); }
+        .menu-item.active { background-color: var(--primary); color: white; font-weight: 600; }
+        .menu-category { font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin-top: 20px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+
+        /* CONTENT */
+        .content { flex: 1; padding: 40px 60px; overflow-y: auto; scroll-behavior: smooth; }
+        .section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .section.active { display: block; }
+        
+        h1 { font-size: 2.5rem; color: #1e293b; margin-bottom: 10px; }
+        h2 { font-size: 1.8rem; margin-top: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; color: #1e293b; }
+        h3 { color: var(--primary); margin-top: 25px; }
+        p, li { line-height: 1.7; color: #475569; }
+        
+        /* CODE BLOCKS */
+        pre { background: #1e293b; color: #a5b4fc; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; position: relative; }
+        .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* ALERTS */
+        .alert { padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid; }
+        .alert-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+        .alert-warn { background: #fff7ed; border-color: #f97316; color: #9a3412; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-rocket"></i> Nexus ERP</div>
+        
+        <div class="menu-category">General</div>
+        <div class="menu-item active" onclick="showSection('intro')"><i class="fa-solid fa-home"></i> Introducción</div>
+        <div class="menu-item" onclick="showSection('flows')"><i class="fa-solid fa-sync"></i> Ciclo de Vida</div>
+
+        <div class="menu-category">Técnico (DevOps)</div>
+        <div class="menu-item" onclick="showSection('install')"><i class="fa-brands fa-docker"></i> Instalación Docker</div>
+        <div class="menu-item" onclick="showSection('db')"><i class="fa-solid fa-database"></i> Base de Datos</div>
+        <div class="menu-item" onclick="showSection('n8n')"><i class="fa-solid fa-robot"></i> Automatización n8n</div>
+
+        <div class="menu-category">Manuales</div>
+        <div class="menu-item" onclick="showSection('staff')"><i class="fa-solid fa-user-shield"></i> Manual Agente</div>
+        <div class="menu-item" onclick="showSection('client')"><i class="fa-solid fa-building"></i> Manual Cliente</div>
+    </div>
+
+    <div class="content">
+        
+        <div id="intro" class="section active">
+            <h1>Bienvenido a Nexus ERP System</h1>
+            <p class="lead">Plataforma integral de gestión de soporte técnico con Inteligencia Artificial.</p>
+            
+            <div class="alert alert-info">
+                <i class="fa-solid fa-info-circle"></i> <strong>Versión Actual:</strong> v9.1 (Production Ready)
+            </div>
+
+            <h2>¿Qué es Nexus?</h2>
+            <p>Nexus es un sistema desacoplado y contenerizado que permite gestionar incidencias de clientes de manera eficiente. Combina:</p>
+            <ul>
+                <li><strong>Dashboard Administrativo:</strong> Para coordinadores y agentes (Kanban, BI, Chat).</li>
+                <li><strong>Portal de Clientes:</strong> Para autogestión, carga de tickets y seguimiento.</li>
+                <li><strong>IA Copilot:</strong> Análisis automático de correos y generación de SLAs.</li>
+            </ul>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top:0"><i class="fa-solid fa-user-tie"></i> Para Staff</h3>
+                    <p>Gestiona tickets, visualiza métricas de rendimiento y responde correos sin salir de la app.</p>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top:0"><i class="fa-solid fa-users"></i> Para Clientes</h3>
+                    <p>Un portal moderno para crear reclamos, ver estadísticas y chatear con soporte.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="install" class="section">
+            <h1>Instalación y Despliegue</h1>
+            <p>Guía paso a paso para levantar el sistema completo usando Docker.</p>
+
+            <h3>1. Requisitos Previos</h3>
+            <ul>
+                <li>Docker Desktop instalado.</li>
+                <li>Git (Opcional, para clonar).</li>
+                <li>Credenciales de Supabase y Gmail.</li>
+            </ul>
+
+            <h3>2. Estructura de Archivos</h3>
+            <p>Asegúrate de que tu carpeta se vea así:</p>
+            <pre>/proyecto
+├── docker-compose.yml
+├── .env
+├── app/
+│   ├── dashboard.py
+│   ├── portal_cliente.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── Dockerfile.portal
+└── n8n_data/</pre>
+
+            <h3>3. Archivo docker-compose.yml</h3>
+            <p>Este archivo orquesta los 3 servicios (Dashboard, Portal y n8n).</p>
+            <pre>
+version: '3.8'
+
+services:
+  nexus-dashboard:
+    build: ./app
+    ports: ["8501:8501"]
+    env_file: .env
+    volumes: [ "./app:/app" ]
+
+  nexus-portal:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.portal
+    ports: ["8502:8502"]
+    env_file: .env
+    volumes: [ "./app:/app" ]
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports: ["5678:5678"]
+    volumes: [ "./n8n_data:/home/node/.n8n" ]</pre>
+
+            <h3>4. Ejecución</h3>
+            <p>Abre la terminal en la carpeta y ejecuta:</p>
+            <pre>docker-compose up -d --build</pre>
+            
+            <div class="alert alert-warn">
+                <strong>Acceso a los sistemas:</strong><br>
+                👮 Dashboard: <a href="http://localhost:8501" target="_blank">http://localhost:8501</a><br>
+                🏢 Portal Cliente: <a href="http://localhost:8502" target="_blank">http://localhost:8502</a><br>
+                🤖 Automatización: <a href="http://localhost:5678" target="_blank">http://localhost:5678</a>
+            </div>
+        </div>
+
+        <div id="db" class="section">
+            <h1>Configuración Base de Datos</h1>
+            <p>El sistema utiliza <strong>Supabase (PostgreSQL)</strong>. Ejecuta este script en el editor SQL de Supabase para crear las tablas necesarias.</p>
+
+            <h3>Script SQL Maestro</h3>
+            <pre>
+-- 1. TICKETS
+CREATE TABLE public.tickets (
+    id_ticket text PRIMARY KEY,
+    fecha_creacion timestamptz DEFAULT now(),
+    usuario_reportante text,
+    email_reportante text,
+    titulo text,
+    descripcion text,
+    estado text DEFAULT 'Abierto',
+    prioridad text DEFAULT 'Media',
+    agente_soporte text DEFAULT 'Sin Asignar',
+    modulo_erp text,
+    comentarios text,
+    datos_faltantes text,
+    adjuntos text
+);
+
+-- 2. USUARIOS (STAFF)
+CREATE TABLE public.usuarios (
+    usuario text PRIMARY KEY, -- Email
+    contrasena text NOT NULL,
+    nombre_agente text,
+    rol text, -- 'Coordinador' o 'Agente'
+    activo boolean DEFAULT true
+);
+
+-- 3. REPORTANTES (CLIENTES)
+CREATE TABLE public.reportantes (
+    email text PRIMARY KEY,
+    password text NOT NULL,
+    nombre text,
+    cliente text, -- Empresa
+    activo boolean DEFAULT true
+);
+
+-- 4. AUDITORIA
+CREATE TABLE public.auditoria (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    fecha timestamptz DEFAULT now(),
+    usuario_responsable text,
+    accion text,
+    detalle text,
+    entidad text
+);</pre>
+        </div>
+
+        <div id="staff" class="section">
+            <h1>👮 Manual del Agente y Coordinador</h1>
+            
+            <h3>Roles del Sistema</h3>
+            <ul>
+                <li><strong>Coordinador:</strong> Tiene visión de "Dios". Ve todos los tickets, todas las métricas y puede gestionar usuarios.</li>
+                <li><strong>Agente:</strong> Solo ve sus tickets asignados y su propio rendimiento.</li>
+            </ul>
+
+            <h3>1. El Tablero Kanban</h3>
+            <p>Es la pantalla principal. Los tickets se organizan en columnas:</p>
+            <ul>
+                <li><span style="color:#ef4444">■</span> <strong>Nuevos:</strong> Nadie los ha tocado. Prioridad máxima.</li>
+                <li><span style="color:#f59e0b">■</span> <strong>En Espera:</strong> Ya respondiste, esperando al cliente.</li>
+                <li><span style="color:#3b82f6">■</span> <strong>En Proceso:</strong> Estás trabajando internamente.</li>
+                <li><span style="color:#10b981">■</span> <strong>Finalizados:</strong> Problema resuelto.</li>
+            </ul>
+
+            <h3>2. Cómo Responder un Ticket</h3>
+            <ol>
+                <li>Haz clic en el botón <strong>"Ver"</strong> de la tarjeta.</li>
+                <li>Lee el historial (El mensaje verde es de la IA, el blanco del cliente).</li>
+                <li>Escribe tu respuesta en el cuadro de texto.</li>
+                <li>Pulsa <strong>"Enviar Respuesta"</strong>.</li>
+            </ol>
+            <div class="alert alert-info">
+                <strong>Nota:</strong> Al enviar, el sistema manda automáticamente un correo al cliente y mueve el ticket a la columna "En Espera".
+            </div>
+
+            <h3>3. Centro de Reportes (Solo Coordinador)</h3>
+            <p>Desde el menú lateral "Reportes", puedes generar:</p>
+            <ul>
+                <li><strong>Rendimiento General:</strong> Excel con todos los tickets.</li>
+                <li><strong>Carga de Trabajo:</strong> Gráficos de quién trabaja más.</li>
+                <li><strong>Auditoría:</strong> Registro de seguridad de movimientos.</li>
+            </ul>
+        </div>
+
+        <div id="client" class="section">
+            <h1>🏢 Manual del Portal de Clientes</h1>
+            
+            <h3>1. Primeros Pasos</h3>
+            <p>Ingresa a <code>http://tudominio:8502</code> con tu email corporativo y contraseña.</p>
+
+            <h3>2. Crear un Reclamo</h3>
+            <p>Ve a la pestaña <strong>"Nuevo Reclamo"</strong>. Completa:</p>
+            <ul>
+                <li><strong>Módulo:</strong> Dónde falló el sistema (Ventas, Stock, etc.).</li>
+                <li><strong>Asunto y Descripción:</strong> Sé detallado.</li>
+                <li><strong>Adjunto:</strong> Sube una captura de pantalla del error.</li>
+            </ul>
+
+            <h3>3. Seguimiento y Chat</h3>
+            <p>En la pestaña <strong>"Mis Tickets"</strong>:</p>
+            <ul>
+                <li>Selecciona tu ticket en el buscador.</li>
+                <li>Verás el chat estilo WhatsApp con el soporte.</li>
+                <li>Puedes responder directamente ahí.</li>
+            </ul>
+            
+            <div class="alert alert-warn">
+                Si el ticket está en estado <strong>"Esperando Cliente"</strong>, significa que el soporte te hizo una pregunta y necesita tu respuesta para continuar.
+            </div>
+        </div>
+
+        <div id="flows" class="section">
+            <h1>🔄 Ciclo de Vida del Ticket</h1>
+            <p>Entender los estados es clave para la automatización.</p>
+
+            <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+                <tr style="background:#e2e8f0; text-align:left;">
+                    <th style="padding:10px;">Estado</th>
+                    <th style="padding:10px;">Significado</th>
+                    <th style="padding:10px;">Acción que lo activa</th>
+                </tr>
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee;"><strong>Abierto</strong></td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">Ticket nuevo o cliente respondió. Requiere atención.</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">Email entrante (n8n).</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee;"><strong>En Revisión</strong></td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">El cliente contestó una pregunta del soporte.</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">Respuesta de cliente sobre ticket existente.</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee;"><strong>Esperando Cliente</strong></td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">La pelota está del lado del cliente.</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">Agente envía respuesta desde Dashboard.</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee;"><strong>Resuelto</strong></td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">Problema solucionado.</td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">Manual (Agente cierra el caso).</td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        function showSection(id) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            // Quitar clase activa del menú
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            
+            // Mostrar la seleccionada
+            document.getElementById(id).classList.add('active');
+            // Activar botón del menú (esto es un hack simple, idealmente usar IDs en botones)
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

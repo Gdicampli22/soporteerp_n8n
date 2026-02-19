@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # --- SERVICIO 1: DASHBOARD (ADMIN/AGENTES) ---
+  nexus-dashboard:
+    build: ./app
+    container_name: nexus_dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./app:/app
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      # Asegúrate de que estas variables estén en tu .env o hardcodeadas si es local
+      # - SUPABASE_URL=${SUPABASE_URL} 
+      # - SUPABASE_KEY=${SUPABASE_KEY}
+    restart: unless-stopped
+
+  # --- SERVICIO 2: PORTAL CLIENTE (NUEVO) ---
+  nexus-portal:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.portal  # Usamos el archivo especial que creamos
+    container_name: nexus_portal
+    ports:
+      - "8502:8502"  # Puerto diferente para no chocar
+    volumes:
+      - ./app:/app   # Comparten la misma carpeta de código
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      # - SUPABASE_URL=${SUPABASE_URL}
+      # - SUPABASE_KEY=${SUPABASE_KEY}
+    restart: unless-stopped
+
+  # --- SERVICIO 3: AUTOMATIZACIÓN n8n (INTACTO) ---
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: nexus_n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=nexuspass
+      - N8N_SECURE_COOKIE=false
+      - TZ=America/Argentina/Buenos_Aires 
+      - dns-result-order=ipv4first
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    restart: unless-stopped
