@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # --- SERVICIO 1: DASHBOARD (ADMIN/AGENTES) ---
   nexus-dashboard:
-    build: ./app
+    build: .
     container_name: nexus_dashboard
     ports:
       - "8501:8501"
@@ -19,7 +19,7 @@ services:
   # --- SERVICIO 2: PORTAL CLIENTE (NUEVO) ---
   nexus-portal:
     build:
-      context: ./app
+      context: .
       dockerfile: Dockerfile.portal  # Usamos el archivo especial que creamos
     container_name: nexus_portal
     ports:
