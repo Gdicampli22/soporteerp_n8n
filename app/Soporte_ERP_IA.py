@@ -1,42 +1,55 @@
 import streamlit as st
 
-# Configuración de página con tu nombre profesional
+# Configuración de página
 st.set_page_config(page_title="Nexus ERP - Gaston Di Campli", layout="wide", page_icon="🚀")
 
-# Estilo para el Copyright fijo y profesional al final
-footer = """
+# Estilo para botones HTML personalizados y Footer
+st.markdown("""
 <style>
-.footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: #0e1117;
-    color: #fafafa;
-    text-align: center;
-    padding: 10px;
-    font-size: 14px;
-    border-top: 1px solid #333;
-    z-index: 100;
-}
+    .demo-button {
+        display: inline-block;
+        padding: 0.5em 1em;
+        color: white;
+        background-color: #ff4b4b;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        text-align: center;
+    }
+    .demo-button:hover {
+        background-color: #ff3333;
+        color: white;
+    }
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #0e1117;
+        color: #fafafa;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+        border-top: 1px solid #333;
+        z-index: 100;
+    }
 </style>
-<div class="footer">
-    <p>© 2026 | Desarrollado por Gaston Di Campli | Nexus ERP AI Suite</p>
-</div>
-"""
-st.markdown(footer, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
+# Footer de Copyright
+st.markdown(f'<div class="footer"><p>© 2026 | Desarrollado por Gaston Di Campli | Nexus ERP AI Suite</p></div>', unsafe_allow_html=True)
 
 st.title("🚀 Nexus ERP: Automatización de Soporte con GenAI")
 st.markdown("---")
 
-# --- SECCIÓN DE INSTRUCCIONES PARA RECLUTADORES ---
+# --- GUÍA PARA RECLUTADORES ---
 st.header("🔍 Guía de Demo para Reclutadores")
 st.info("""
 **Siga este flujo para evaluar la integración técnica:**
-1. **Disparo del Workflow:** Envíe un correo a `erpsoporteia@gmail.com` detallando un problema técnico ficticio.
-2. **Respuesta Inteligente:** Recibirá un email en segundos con un **Ticket ID** y un análisis redactado por **Google Gemini**.
-3. **Validación de Usuario:** Use su ID en el **Portal de Clientes** para seguir el historial.
-4. **Gestión de Agente:** Ingrese al **Dashboard** para ver el análisis de sentimiento y actualizar el estado del ticket.
+1. **Envío de Ticket:** Envíe un correo a `erpsoporteia@gmail.com`.
+2. **Respuesta IA:** Recibirá un email (SLA) analizado por **IA** con un **Ticket ID**.
+3. **Portal de Clientes:** Use su ID para seguir el historial en tiempo real.
+4. **Dashboard de Agentes:** Gestione el estado y vea el análisis de sentimiento.
 """)
 
 st.markdown("### Seleccione su perfil para ingresar:")
@@ -44,16 +57,16 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("👤 Portal de Clientes")
-    st.write("Interfaz de cara al usuario para consulta de estados y trazabilidad.")
-    # Link real del Portal de Clientes
-    st.link_button("Ir al Portal de Clientes", "https://portclientes.streamlit.app/")
+    st.write("Seguimiento y trazabilidad de tickets.")
+    # Botón HTML que fuerza la apertura en pestaña nueva
+    st.markdown('<a href="https://portclientes.streamlit.app/" target="_blank" class="demo-button">Ingresar como Cliente</a>', unsafe_allow_html=True)
 
 with col2:
     st.subheader("🛠️ Dashboard de Agentes")
-    st.write("Panel administrativo con IA Insights y gestión de base de datos Supabase.")
-    # Link real del Dashboard de Agentes
-    st.link_button("Ir al Dashboard de Agentes", "https://dashboardagente.streamlit.app/")
+    st.write("Análisis IA y gestión de estados en Supabase.")
+    # Botón HTML que fuerza la apertura en pestaña nueva
+    st.markdown('<a href="https://dashboardagente.streamlit.app/" target="_blank" class="demo-button">Ingresar como Agente</a>', unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown("#### Stack Tecnológico del Proyecto:")
-st.code("Python (Streamlit) | n8n (Automation) | Google Gemini (GenAI) | Supabase (PostgreSQL) | Railway (Cloud)")
+st.markdown("#### Stack Tecnológico:")
+st.code("Python (Streamlit) | n8n | Google Gemini AI | Supabase | Railway Cloud")
