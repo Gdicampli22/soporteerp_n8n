@@ -84,6 +84,7 @@ with col1:
 with col2:
     st.subheader("🛠️ Dashboard de Agentes")
     st.write("Panel administrativo con IA Insights y gestión de ticket por Agentes de Soporte..")
+    st.write("***Aqui podra ingresa con usuario DEMO Coordinador: 'ADMIN' o Agente: 'Agente'*** ")
     # Botón UX: Azul LinkedIn, tipografía clara, abre por fuera
     st.markdown('<a href="https://dashboardagente.streamlit.app/" target="_blank" class="demo-button">Ingresar como Agente</a>', unsafe_allow_html=True)
 
