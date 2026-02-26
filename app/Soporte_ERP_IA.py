@@ -77,7 +77,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.subheader("👤 Portal de Clientes")
     st.write("Interfaz limpia para seguimiento y trazabilidad de tickets por ID por parte del cliente.")
-     st.write("***En el email que llega con el SLA va disponer de usuario y clave para el portal***")
+    st.write("***En el email que llega con el SLA va disponer de usuario y clave para el portal***")
     # Botón UX: Azul LinkedIn, tipografía clara, abre por fuera
     st.markdown('<a href="https://portclientes.streamlit.app/" target="_blank" class="demo-button">Ingresar como Cliente</a>', unsafe_allow_html=True)
 
